@@ -25,17 +25,22 @@ app.get("/", function (request, response) {
 });
 
 app.get("/:id", function (request, response) {
-  var id = request.params.id;
+  var id = parseInt(request.params.id,10);
   mongo.connect(urlMongo, function(err,db){
-      if (err) throw err;
+    if (err) throw err;
     
     var urls = db.collection("urls");
-
     urls.findOne({_id: id}, function(err, doc) {
       if (err) throw err;
-      response.redirect(doc.original_url);
-      response.end();
+      if (doc) {
+        response.redirect(doc.original_url);
+      }
+      else {
+        response.status(404);
+        response.end(JSON.stringify({error: "'http://" + request.headers["x-forwarded-host"] + "/" + request.params.id + "' does not exists."}));
+      }
       db.close();
+    });
   });
 });
 
